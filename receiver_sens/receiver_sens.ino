@@ -4,21 +4,26 @@
 #include "semphr.h"
 #include "task.h"
 
+//set priorities for the tasks
 #define LCD_TASK_PRIORITY  ( tskIDLE_PRIORITY )
 #define RECEIVE_TASK_PRIORITY ( tskIDLE_PRIORITY +2)
 #define BUZZER_TASK_PRIORITY ( tskIDLE_PRIORITY )
 
-
+//declare lcd pins
 const int rs = 2, en = 3, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+
 LiquidCrystal LCD(rs , en , d4 ,d5 , d6 ,d7);
 
 SemaphoreHandle_t recv_Semaphore = NULL;
+
 TaskHandle_t recv_TaskHandle;
 TaskHandle_t lcd_TaskHandle;
 TaskHandle_t buzz_TaskHandle;
 
 int recv_data = 0;
 
+//buzzer task temporary suspended
+//The functionality was moved in the lcd task
 
 /*void buzzingTask(void *pvParameters)
 
@@ -37,15 +42,17 @@ int recv_data = 0;
   }
 }*/
 
+//LCD task
 void lcd_UpdateTask(void *pvParameters)
 {
-  TickType_t xLastWakeTime = xTaskGetTickCount();  
+  TickType_t xLastWakeTime = xTaskGetTickCount(); 
+  //printing o the lcd
   LCD.setCursor(0,0);
   LCD.print("Hello!");
   LCD.setCursor(0 , 1);
-  LCD.print("Smoke per:");
+  LCD.print("Gas per:");
   while(1)
-  {
+  { 
     //Serial.println("task lcd");
      
     if(recv_data > 30)
@@ -56,6 +63,9 @@ void lcd_UpdateTask(void *pvParameters)
       vTaskDelay( 500 / portTICK_PERIOD_MS);
       LCD.setCursor(0,0);
       LCD.print("Warning!");
+      LCD.setCursor(10,1);
+      
+      LCD.print(recv_data);
       
     }    
    else
@@ -112,18 +122,6 @@ uint8_t receiveEvent()
   }
 }
 
-/*void buzzingEvent()
-{  
-  //recv_data = Wire.read();
-  if(recv_data > 30)
-  {
-    xSemaphoreGive(buzz_Semaphore);
-  }
-  else
-  {
-    xSemaphoreTake(buzz_Semaphore , 0);
-  }
-}*/
 
 void setup() {
   // put your setup code here, to run once:  
